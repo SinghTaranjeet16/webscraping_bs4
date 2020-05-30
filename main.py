@@ -95,10 +95,10 @@ def main():
 
     # Main processing loop
     while True:
-        print(f"---------------------------------------------------")
-        print(f"-      Running parser to fetch route details      -")
-        print(f"-\t\t[{strftime('%Y-%m-%d %H:%M:%S',localtime())}]-")
-        print(f"---------------------------------------------------")
+        print(f"+-------------------------------------------------+")
+        print(f"|      Running parser to fetch route details      |")
+        print(f"|\t\t[{strftime('%Y-%m-%d %H:%M:%S',localtime())}]|")
+        print(f"+-------------------------------------------------+")
 
         try:
             # HTML content of the website
