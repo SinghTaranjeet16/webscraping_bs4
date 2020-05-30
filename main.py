@@ -146,22 +146,23 @@ def main():
             pdf_file_list = glob.glob(os.path.join(DIR_PATH, "*.pdf"))
             if not pdf_file_list:
                 raise Exception(f"No PDF files found in '{DIR_PATH}'")
-            else:
-                for pdf_file in pdf_file_list:
-                    txt_file_path = os.path.join(DIR_PATH, f'{pdf_file}.txt')
-                    if os.path.isfile(txt_file_path):
-                        print(f"[INFO] - Text file '{txt_file_path}' already exists. Not parsing pdf")
-                        # under the assumption that file already exists, notifiction has been sent before
-                        notification_send = True
-                        continue
-                    # If text file doesn't exists before, parse text from pdf
-                    notification_send = False
-                    print(f"[INFO] - Converting {pdf_file} ...")
-                    with open(txt_file_path, 'w') as f:
-                        f.write(extract_text_from_pdf(pdf_file))
+            for pdf_file in pdf_file_list:
+                txt_file_path = os.path.join(DIR_PATH, f'{pdf_file}.txt')
+                if os.path.isfile(txt_file_path):
+                    print(f"[INFO] - Text file '{txt_file_path}' already exists. Not parsing pdf")
+                    # under the assumption that file already exists, notifiction has been sent before
+                    notification_send = True
+                    continue
+                # If text file doesn't exists before, parse text from pdf
+                notification_send = False
+                print(f"[INFO] - Converting {pdf_file} ...")
+                with open(txt_file_path, 'w') as f:
+                    f.write(extract_text_from_pdf(pdf_file))
 
             # Parse text file to grab all the possible itenary details
             txt_file_list = glob.glob(os.path.join(DIR_PATH, "*.txt"))
+            if not txt_file_list:
+                raise Exception(f"No TXT files found in '{DIR_PATH}'")
             for txt_file in txt_file_list:
                 route_info_list = save_imp_routes(txt_file, depart="DELHI", arrival="TORONTO")
                 if not route_info_list:
