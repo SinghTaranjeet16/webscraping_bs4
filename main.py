@@ -20,7 +20,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Credentials used for notifiers library
 # Credentials dictionary has the format {token=xxx}
-PUSHBULLET_CRED_FILE = os.path.join(os.path.dirname(DIR_PATH), 'pushbullet_credentials')
+PUSHBULLET_CRED_FILE = os.path.join(DIR_PATH, 'pushbullet_credentials')
 PUSHBULLET_CRED_DICT = {}
 
 # Wait time between sending queries to url (in minutes)
