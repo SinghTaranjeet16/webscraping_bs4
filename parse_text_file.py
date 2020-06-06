@@ -18,7 +18,6 @@ logger.addHandler(fh)
 LEAVING_FROM = "DELHI"
 GOING_TO = "TORONTO"
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-logging.info(f"Dir path: {DIR_PATH}")
 TXT_FILE_PATH = os.path.join(DIR_PATH, 'Corrected-Copy-of-Mission-Vande-phase-2-schedule.txt')
 ITER_PATTERN = re.compile("([0-9]+-[A-Za-z]+-[0-9]+.*)")
 
@@ -80,12 +79,12 @@ def save_imp_routes(file_path, depart=LEAVING_FROM, arrival=GOING_TO):
                 # Although a column item can have 1 space in between (e.g. NEW YORK)
                 match_and_split_list = re.split("\s{2,}", match_pattern.group(1))
                 # For some file parsed text, if flight name is split as well, join them
-                if match_and_split_list[1] == "AI":
+                if match_and_split_list[1].upper() == "AI":
                     match_and_split_list[1] += ' ' + match_and_split_list.pop(2)
                 logger.debug(f"split list: {match_and_split_list}")
                 # List items will be: Date, Flight, Dep station, Dep time, Arr station, Arr time, Arrival data
-                if match_and_split_list[2] == depart and \
-                        match_and_split_list[4] == arrival:
+                if match_and_split_list[2].upper() == depart and \
+                        match_and_split_list[4].upper() == arrival:
                     logger.info(f"MATCH FOUND IN LINE: {line_text}")
                     if not match_and_split_list[0] in final_route_dates:
                         final_route_dates.append(match_and_split_list[0])

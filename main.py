@@ -14,10 +14,12 @@ import pdftotext
 from notifiers import get_notifier
 from parse_text_file import save_imp_routes
 
-# URLs to track
+# Itenary related details
 URL_HOME = "http://www.airindia.in"
 LANDING_PAGE = "/r1landingpage.htm"
 EVAC_PAGE = "/evacuation-flight.htm"
+DEPARTURE = "DELHI"
+ARRIVAL = "VANCOUVER"
 
 # Directory path where the code and credentials will be saved
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -28,7 +30,7 @@ logging.getLogger("parse_text_file").setLevel(level=logging.WARNING)
 
 # Logging settings for current module
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.DEBUG)
+logger.setLevel(level=logging.INFO)
 fh = logging.StreamHandler()
 fh_formatter = logging.Formatter('%(asctime)s %(levelname)s - %(message)s')
 fh.setFormatter(fh_formatter)
@@ -199,7 +201,7 @@ def main():
 
             for txt_file in txt_file_list:
                 txt_file_name_without_ext = txt_file.split('/')[-1].split('.')[0]
-                route_dates_list = save_imp_routes(txt_file, depart="DELHI", arrival="TORONTO")
+                route_dates_list = save_imp_routes(txt_file, depart=DEPARTURE, arrival=ARRIVAL)
                 if not route_dates_list:
                     logger.warning(f"Missing or empty route dates list: {route_dates_list}")
                 else:
