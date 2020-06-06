@@ -2,12 +2,12 @@
 * Current project code will scrap the Air-India web page to see if there a new entry for evacuation flights leaving India. 
 * Will also check travel advisory page and changes are reported if pass a certain threshold
 * Grabs the pdf file for evacuation routes, convert to text and parse it to find the appropriate to/from route details and eventually send the notification through _pushbullet_ to android.
-* Route details will looks like this
+* Result will looks like this (itenary dates)
 ```python
 ['20-May-2020', '1-Jun-2020']
 ```
 
-# USAGE
+# Usage
 * Clone the repo
 * Fill in the correct credentials for _pushbullet_ in `pushbullet_credentials`
 * Either you can run the code as `python3 main.py` or through Dockerfile as follows
