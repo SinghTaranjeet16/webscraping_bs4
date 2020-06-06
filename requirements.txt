@@ -1,0 +1,5 @@
+beautifulsoup4==4.9.1
+pdftotext==2.1.4
+notifiers==1.2.1
+requests==2.22.0
+lxml==4.5.1

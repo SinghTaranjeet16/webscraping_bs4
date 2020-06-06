@@ -28,12 +28,27 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 # Set logging level to WARNING for imported module(s), else it will also print
 logging.getLogger("parse_text_file").setLevel(level=logging.WARNING)
 
+""" LOGGING DETAILS """
 # Logging settings for current module
+os.makedirs(os.path.join(DIR_PATH, "logs"), exist_ok=True)
+# Create custom logger
+# Put logger to lowest level
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
-fh = logging.StreamHandler()
-fh_formatter = logging.Formatter('%(asctime)s %(levelname)s - %(message)s')
+logger.setLevel(logging.DEBUG)
+# Create handlers
+sh = logging.StreamHandler()
+fh = logging.FileHandler(os.path.join(DIR_PATH, "logs", "printlogs.log"), 'a')
+# Set individual debugging level for handlers
+sh.setLevel(logging.INFO)
+fh.setLevel(logging.DEBUG)
+# Create formatter
+sh_formatter = logging.Formatter('%(asctime)s - %(levelname)s: %(message)s')
+fh_formatter = logging.Formatter("%(asctime)s - %(process)d - %(module)s - %(levelname)s: %(message)s")
+# Set formatter
+sh.setFormatter(sh_formatter)
 fh.setFormatter(fh_formatter)
+# Add handlers to the logger
+logger.addHandler(sh)
 logger.addHandler(fh)
 
 # Credentials used for notifiers library
@@ -78,7 +93,10 @@ def convert_pdf_to_txt_file(pdf_file_path, txt_file_path):
 
 
 def main():
-
+    """
+    Grabs the iternary details from website through pdf to text parsing
+    Any useful information is reported through push notification
+    """
     # Initialize notifier instance and set credentials
     pushbullet_notifier = get_notifier('pushbullet')
     read_credentials(PUSHBULLET_CRED_FILE, PUSHBULLET_CRED_DICT)
@@ -215,9 +233,8 @@ def main():
 
         # Prints out and send a notifiction for any exception that occured
         except Exception as err:
-            err_str = f"Exception occured: [{repr(err)}]"
-            logger.error(err_str)
-            logger.error(f"Traceback: {traceback.format_exc()}")
+            logger.error(f"Exception occured: [{repr(err)}]")
+            logger.error("Traceback: ", exc_info=True)
             pushbullet_notifier.notify(message=json.dumps(traceback.format_exc()), **PUSHBULLET_CRED_DICT)
 
         # Eventually, wait for next iteration
