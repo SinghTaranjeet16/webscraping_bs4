@@ -1,33 +1,29 @@
 # Standart imports
 import os
 import re
-from itertools import count
+import logging
 
 # New page identifier
-PAGE_START_IDENTIFIER = "VANDE BHARAT MISSION"
+PAGE_START_IDENTIFIER = "CARES"
 
-# First is departure station and second is departure time
-COLUMN_NAMES = ["DATE", "FLIGHT", "DEPARTURE", "ARRIVAL"]
+# Set logging details for this module
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.DEBUG)
+fh = logging.StreamHandler()
+fh_formatter = logging.Formatter('%(asctime)s %(module)s - %(message)s')
+fh.setFormatter(fh_formatter)
+logger.addHandler(fh)
 
 # File path and itenary details for testing standalone app
 LEAVING_FROM = "DELHI"
 GOING_TO = "TORONTO"
-TXT_FILE_PATH = os.path.join(
-    os.getcwd(), "webscraping_bs4/Web-schedule-phase-2-complete-30-May-20-1400-Hrs-converted.txt")
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+logging.info(f"Dir path: {DIR_PATH}")
+TXT_FILE_PATH = os.path.join(DIR_PATH, 'Corrected-Copy-of-Mission-Vande-phase-2-schedule.txt')
+ITER_PATTERN = re.compile("([0-9]+-[A-Za-z]+-[0-9]+.*)")
 
 # Standalone check for printing debug statments
 STANDALONE = False
-
-
-def print_standalone(arg):
-    """
-    Print only when running as a standalone program
-
-    Arguments:
-        str {String} -- String to print
-    """
-    if STANDALONE:
-        print(arg)
 
 
 def save_imp_routes(file_path, depart=LEAVING_FROM, arrival=GOING_TO):
@@ -42,89 +38,63 @@ def save_imp_routes(file_path, depart=LEAVING_FROM, arrival=GOING_TO):
         arrival {string} -- Arrival location (default: {GOING_TO})
 
     Returns:
-        List -- List of dictionaries of all the found routes based upon the parameters
+        List -- List of departue dates
     """
-    # Page number counter
-    counter = count()
 
     # Verify if file path exits
     # Read all file content in a list
     if not os.path.isfile(file_path):
-        print_standalone(f"File path [{file_path}] is not valid!")
+        logger.critical(f"File path [{file_path}] is not valid!")
         return
     with open(file_path, 'r') as f:
         file_content = f.readlines()
 
-    # Variables used for parsing
-    # start_header_read: True when header related strings are found
-    # Headers that exists are: DATE, FLIGHT, DEPARTURE STATION. ARRIVAL STATION, DEPARTURE TIME
-    # header_used: A header section is found implying we can start collecting data
-    start_header_read = False
-    header_used = None
-
-    # Dictionary that will save each parsed iternary details
-    key_names = ["Date",
-                 "Flight",
-                 "Departure Station",
-                 "Arrival Station",
-                 "Departure Time"]
-
     # Final list containing all the routes
-    final_route = []
-
-    # Since we need to move the list item index manually, enumerator didn't seem useful
-    list_idx = 0
+    final_route_dates = []
 
     # Keep running loop until the departure flight entries aren't exhausted
-    while True:
-        line_text = file_content[list_idx].strip()
-        print_standalone(f'Current line text: {line_text}')
+    page_number = 0
+    for line_text in file_content:
+        line_text = line_text.strip()
+        logger.debug(f'Current line text: {line_text}')
 
         # New page identifier
-        if PAGE_START_IDENTIFIER in line_text:
-            page_number = next(counter) + 1
-            print_standalone(f"On page number #{page_number}")
+        # Removes any spaces in the line text
+        if line_text.strip().upper() == PAGE_START_IDENTIFIER:
+            page_number += 1
+            logger.info(f"On page number #{page_number}")
 
         # Arrival flights section
         # We will break the loop here since we're looking for outbound flights
-        elif "arrival into India" in line_text:
-            print_standalone(f"Departure flights section ended. Total pages parsed: {page_number}")
+        elif "ARRIVAL INTO INDIA" in line_text.upper():
+            logger.info(f"Departure flights section ended. Total pages parsed: {page_number}")
             break
 
-        # Check if current line is not empty AND
-        # Check if a header string element is detected. If yes, since data is a table...
-        # ...all entries will start from same line index until empty line is detected
-        elif line_text != "" and (any(x in line_text for x in COLUMN_NAMES) or start_header_read):
-            # Since it's a new header, enable the boolean and increment list item index
-            # It's done becaused the text file parsed from pdf have empty line OR
-            # Header name is being continued in the next index
-            if not start_header_read:
-                start_header_read = True
-                print_standalone(f"Header detected: {header_used}")
-                header_used = line_text
-                list_idx += 2
-            # If's it's not new header, means it's the data porttion of the table
-            # Each table entry is seperated by multiple spaces, however, data can also be spaced (eg NEW YORK)
-            # Data is in the order as follows: Data, Flight, Dep station, Arr station, Dep data
-            else:
-                match_and_split_list = re.split("\s{2,}[^a-z0-9A-Z-]", line_text)
-                if match_and_split_list and \
-                   match_and_split_list[2] == depart and \
-                   match_and_split_list[3] == arrival:
-                    final_route.append(dict(zip(key_names, match_and_split_list)))
+        # If it's neither page starting string nor arrival flights
+        # Then search for pattern of iternary details
+        else:
+            match_pattern = re.search(ITER_PATTERN, line_text)
+            if match_pattern:
+                logger.debug(f"Search group-1: {match_pattern.group(1)}")
+                # Split the found pattern where each column is seperated by multiple spaces
+                # Although a column item can have 1 space in between (e.g. NEW YORK)
+                match_and_split_list = re.split("\s{2,}", match_pattern.group(1))
+                # For some file parsed text, if flight name is split as well, join them
+                if match_and_split_list[1] == "AI":
+                    match_and_split_list[1] += ' ' + match_and_split_list.pop(2)
+                logger.debug(f"split list: {match_and_split_list}")
+                # List items will be: Date, Flight, Dep station, Dep time, Arr station, Arr time, Arrival data
+                if match_and_split_list[2] == depart and \
+                        match_and_split_list[4] == arrival:
+                    logger.info(f"MATCH FOUND IN LINE: {line_text}")
+                    if not match_and_split_list[0] in final_route_dates:
+                        final_route_dates.append(match_and_split_list[0])
                 else:
-                    print_standalone(f"[WARNING] - No matching pattern found in '{line_text}'")
-        # If current line is empty string AND we have header is currently being process...
-        # ...implies that all data is parsed
-        elif line_text == "" and start_header_read:
-            start_header_read = False
+                    logger.debug(f"No matching route found in '{line_text}'")
 
-        # Read next item in the file_content list
-        list_idx += 1
-
-    print_standalone("All departing flights list exhausted")
-    print_standalone(f"Total available routes: {final_route}")
-    return final_route
+    logger.info("Departing flights list exhausted")
+    logger.info(f"All available dates: {final_route_dates}")
+    return final_route_dates
 
 
 def main():
